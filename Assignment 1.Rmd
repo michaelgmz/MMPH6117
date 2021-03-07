@@ -1,0 +1,113 @@
+---
+title: "MMPH6117 Assignment 1"
+author: 
+- "Name: Mingze Gao"
+- "UID: 3035426241"
+subtitle: "Association of invasive meningococcal disease and environmental and virologic exposure"
+output:
+  html_document:
+    df_print: paged
+---
+
+Weekly counts of invasive meningococcal disease (IMD) reported cases from country A in 1997-2000 were collected and analyzed, to study associations between IMD and environmental and virologic exposure. The file ‘IMD.csv’ stored the following variables which were found to be significant factors from the literature in other places:  
+(1) flu: influenza isolation rate from laboratory  
+(2) maxtemp: weekly maximum temperature  
+(3) IMD: weekly number of IMD cases  
+(4) pop: population size  
+
+```{r Read Data}
+library(readr)
+IMD <- read_csv("CMED6020 Assignment1 - IMD.CSV")
+```
+
+a) Fit a poisson regression model to predict weekly IMD cases using flu and maxtemp, accounting for the increasing population size in 1997-2000. Summarize your results in a table.  [4 marks]
+```{r}
+summary(model_poi <- glm(imd ~ flu + maxtemp + log10(pop), data = IMD, family = poisson()))
+```
+
+b) Assess the goodness of fit of the model. [1 marks]
+```{r}
+deviance(model_poi) / df.residual(model_poi)
+```
+
+The  residual deviance / df is way larger than 1, therefore this model is poorly fitted.
+
+c) Quote the mean and variance of the weekly IMD cases. Is there any evidence of overdispersion? [1 marks]
+```{r}
+imd_mean <- mean(IMD$imd)
+imd_var <- var(IMD$imd)
+print (paste("Mean:", imd_mean, sep = " "))
+print (paste("Var:", imd_var, sep = " "))
+```
+
+The difference between mean and variance of the weekly IMD cases are extremely high. Possion distribution ideally have equal parameters. So, yes evidence of overdispersion.
+
+d) Fit a negative binomial regression model to predict weekly IMD cases and summarize your results in a table. [4 marks]
+```{r}
+require(MASS)
+summary(model_nb <- glm.nb(imd ~ flu + maxtemp + log10(pop), data = IMD))
+```
+
+e) Assess the goodness of fit of the model. [1 marks] 
+```{r}
+deviance(model_nb) / df.residual(model_nb)
+```
+
+The model fit the data satisfactorily.
+
+f) Calculate the AIC for the poisson and negative binomial regression models and select the best model based on AIC and goodness of fit. [1 marks]
+```{r}
+print (paste("aic_poi:", model_poi$aic, sep = " "))
+print (paste("aic_nb:", model_nb$aic, sep = " "))
+```
+
+Based on AIC and goodness of fit, negative binomial regreesion model should be chosen, as AIC is lower and deviance not far from 1.
+
+g) Assess if the linear effects for the variables flu and maxtemp are adequate. [2 marks]
+```{r}
+model_nb$coefficients
+```
+
+The coefficient for flu and maxtemp are 1.534 and 0.013 respectively. Linear effects for flu is adequate whilst not much adequate for maxtemp.
+
+h) Assess if there is any collinearity problem in your final model? [2 marks]
+```{r}
+require(car)
+vif(model_nb)
+```
+
+The VIF is close to 1 which indicates no clear multi-collinearity problem between variables in the model.
+
+i) Assess if there is any unexplained serial correlation after fitting your final model. [2 marks]
+```{r}
+acf(model_nb$residuals)
+pacf(model_nb$residuals)
+```
+
+ACF and partial ACF plots has not shown exceeding confidence limit in the first few lags so there should be no unexplained serial correlation.
+
+j) Draw an overall conclusion on the findings. [3 marks]
+```{r}
+round(exp(cbind(coef(model_nb), confint(model_nb))),3)
+```
+
+We can present the weekly counts of IMD for flu, which is 4.638 (95% CI: 0.618 - 34.772).
+We can say that the weekly counts of IMD varies a great deal between different time.
+The fit of negative binominal model seems to be acceptable compare with possion regression model.
+
+k) Based on the final model, predict the number of IMD cases in a week, if the influenza isolation rate is 0.3, with a maximum temperature of 5ºC and a population of 110 million. [2 marks]
+```{r}
+new_data <- data.frame(flu = 0.3, maxtemp = 5, pop = 110000000)
+predict(model_nb, newdata = new_data, type = "response")
+```
+
+
+l) Based on the final model, which of the conditions below will have a higher population risk of IMD, so more attention should be paid to suspected IMD cases for earlier treatment? [2 marks]  
+1. Influenza isolation rate = 0.1, maximum temperature = 10ºC
+2. Influenza isolation rate = 0.4, maximum temperature = -5ºC
+```{r}
+new_data <- data.frame(flu = c(0.1, 0.4), maxtemp = c(10, -5), pop = 110000000)
+predict(model_nb, newdata = new_data, type = "response")
+```
+
+Condition 2 have a higher population resk of IMD.
