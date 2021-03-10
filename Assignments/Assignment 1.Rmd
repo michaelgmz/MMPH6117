@@ -17,12 +17,12 @@ Weekly counts of invasive meningococcal disease (IMD) reported cases from countr
 
 ```{r Read Data}
 library(readr)
-IMD <- read_csv("CMED6020 Assignment1 - IMD.CSV")
+IMD <- read_csv("../Data/CMED6020 Assignment1 - IMD.CSV")
 ```
 
 a) Fit a poisson regression model to predict weekly IMD cases using flu and maxtemp, accounting for the increasing population size in 1997-2000. Summarize your results in a table.  [4 marks]
 ```{r}
-summary(model_poi <- glm(imd ~ flu + maxtemp + log10(pop), data = IMD, family = poisson()))
+summary(model_poi <- glm(imd ~ flu + maxtemp + offset(log10(pop)), data = IMD, family = poisson()))
 ```
 
 b) Assess the goodness of fit of the model. [1 marks]
@@ -45,7 +45,7 @@ The difference between mean and variance of the weekly IMD cases are extremely h
 d) Fit a negative binomial regression model to predict weekly IMD cases and summarize your results in a table. [4 marks]
 ```{r}
 require(MASS)
-summary(model_nb <- glm.nb(imd ~ flu + maxtemp + log10(pop), data = IMD))
+summary(model_nb <- glm.nb(imd ~ flu + maxtemp + offset(log10(pop)), data = IMD))
 ```
 
 e) Assess the goodness of fit of the model. [1 marks] 
@@ -91,7 +91,7 @@ j) Draw an overall conclusion on the findings. [3 marks]
 round(exp(cbind(coef(model_nb), confint(model_nb))),3)
 ```
 
-We can present the weekly counts of IMD for flu, which is 4.638 (95% CI: 0.618 - 34.772).
+We can present the weekly counts of IMD for flu, which is 4.696 (95% CI: 0.635 - 34.710).
 We can say that the weekly counts of IMD varies a great deal between different time.
 The fit of negative binominal model seems to be acceptable compare with possion regression model.
 
