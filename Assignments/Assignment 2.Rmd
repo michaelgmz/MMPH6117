@@ -1,0 +1,88 @@
+---
+title: "MMPH6117 Assignment 2"
+author: 
+- "Name: Mingze Gao"
+- "UID: 3035426241"
+subtitle: "Effectiveness of early administration of oseltamivir to patients with H1N1 pdm"
+output:
+  html_document:
+    df_print: paged
+---
+
+An observation study of 1,600 patients infected by pandemic H1N1 who are admitted to ICU was conducted to investigate the effectiveness of early administration of oseltamivir within 48 hours. The dataset ‘H1N1pdm.csv’ stored the following variables related to the timing of treatment and mortality:  
+(1) Agegp indicates age group (1 = children, 2 = adult, 3 = elderly)  
+(2) Males were recorded with male = 1  
+(3) Co-morbid conditions: asthma, copd  
+(4) mv = 1 indicates mechanical ventilation is needed for the patient on admission  
+(5) et = 1 indicates early treatment of oseltamivir within 48 hours  
+(6) death = 1 indicates patients ultimately died of pdm H1N1  
+
+```{r Read Data}
+library(readr)
+H1N1 <- read_csv("../Data/CMED6020 Assignment2 - H1N1pdm.CSV")
+```
+
+a) Calculate the crude mortality rates of patients receiving early and late oseltamivir treatment respectively. [2 marks]  
+```{r}
+with(H1N1, table(et, death), 1)
+round(with(H1N1, prop.table(table(et, death), 1)), 3)
+with(H1N1, t.test(death ~ et))
+```
+Treatment: 5.6% | Control: 5.9%  
+Estimated treatment effect = 0.3%, 95% CI (-2.4%, 2.9%)  
+
+b) Describe the patient characteristics across the two treatment groups. [3 marks]  
+```{r}
+library(ggplot2)
+H1N1$et <- as.factor(H1N1$et)
+with(H1N1, table(agegp, et), 1)
+with(H1N1, table(male, et), 1)
+with(H1N1, table(mv, et), 1)
+with(H1N1, table(asthma, et), 1)
+with(H1N1, table(copd, et), 1)
+```
+Patients receiving early treatment tend to be ealderly.  
+Patients receiving early treatment has no significant difference between genders.  
+Patients receiving early treatment tend to use mechanism ventalition less.  
+Patients receiving early treatment tend to have less co-morbid conditions.  
+These factos could be associated with mortality.  
+
+c) Estimate the propensity score of receiving early oseltamivir treatment by including all available predictors as main effects in a logistic regression model. Comment on the main characteristics of patients receiving early treatment. [4 marks]  
+```{r}
+model <- glm(et ~ agegp + male + mv + asthma + copd, data = H1N1, family = binomial(link = "logit"))
+model
+H1N1$ps <- predict(model, type = "response")
+ggplot(H1N1, aes(x = ps, fill = et)) + 
+  geom_histogram(binwidth = 0.01) + 
+  facet_grid(et ~ .)
+```
+Based on the results, the main charactesristics of patients receiving the treatments should be agegp and copd, followed by mv as they have higher coefficients.  
+For the propensity score, the common support in the range is 0.05 - 0.6.  
+
+d) Propensity score stratification (by propensity score quintiles) will be used to analyze the effect of early treatment. Quote the propensity score quintiles. [2 marks]  
+```{r}
+ps.boundary <- quantile(H1N1$ps, 0:5 / 5)
+ps.boundary
+H1N1$psq <- cut(H1N1$ps, ps.boundary, right = F, include.lowest = T, labels = 1:5)
+```
+
+e) Assess the balance of the patient characteristics and sample size across treatment groups by propensity score strata (Note: as the dataset have mainly categorical variables, this may limit the possibility of balancing of all variables). Propose any potential way to improve the balance? [4 marks]  
+```{r}
+test <- summary(lm(agegp~et+psq, data=H1N1))
+test$coefficients['t value']
+```
+
+f) Calculate the stratum-specific and overall effect of early treatment (simple mean of the 5 strata). Please also provide the 95% CI for the overall treatment effect. [4 marks]  
+```{r}
+
+```
+
+g) Estimate the overall treatment effect using conditional logistic regression. [3 marks]  
+```{r}
+
+```
+
+h) Based on the above results, comment on the effectiveness of early treatment of oseltamivir in reducing mortality and validity of the results in terms of control for confounders. [3 marks]  
+```{r}
+
+```
