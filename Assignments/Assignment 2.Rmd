@@ -68,21 +68,77 @@ H1N1$psq <- cut(H1N1$ps, ps.boundary, right = F, include.lowest = T, labels = 1:
 
 e) Assess the balance of the patient characteristics and sample size across treatment groups by propensity score strata (Note: as the dataset have mainly categorical variables, this may limit the possibility of balancing of all variables). Propose any potential way to improve the balance? [4 marks]  
 ```{r}
-test <- summary(lm(agegp~et+psq, data=H1N1))
-test$coefficients['t value']
+df <- data.frame(matrix(nrow = 6, ncol = 2))
+colnames(df) <- c('Unadjusted', 'Adjusted')
+rownames(df) <- c('Agegp', 'Male', 'Asthma', 'Copd', 'Mv', 'Sample Size')
+
+lmu <- summary(lm(agegp~et, data=H1N1))
+lma <- summary(lm(agegp~et+psq, data=H1N1))
+df['Agegp', 'Unadjusted'] <- lmu[['coefficients']][2, 3]
+df['Agegp', 'Adjusted'] <- lma[['coefficients']][2, 3]
+
+lmu <- summary(lm(male~et, data=H1N1))
+lma <- summary(lm(male~et+psq, data=H1N1))
+df['Male', 'Unadjusted'] <- lmu[['coefficients']][2, 3]
+df['Male', 'Adjusted'] <- lma[['coefficients']][2, 3]
+
+lmu <- summary(lm(asthma~et, data=H1N1))
+lma <- summary(lm(asthma~et+psq, data=H1N1))
+df['Asthma', 'Unadjusted'] <- lmu[['coefficients']][2, 3]
+df['Asthma', 'Adjusted'] <- lma[['coefficients']][2, 3]
+
+lmu <- summary(lm(copd~et, data=H1N1))
+lma <- summary(lm(copd~et+psq, data=H1N1))
+df['Copd', 'Unadjusted'] <- lmu[['coefficients']][2, 3]
+df['Copd', 'Adjusted'] <- lma[['coefficients']][2, 3]
+
+lmu <- summary(lm(mv~et, data=H1N1))
+lma <- summary(lm(mv~et+psq, data=H1N1))
+df['Mv', 'Unadjusted'] <- lmu[['coefficients']][2, 3]
+df['Mv', 'Adjusted'] <- lma[['coefficients']][2, 3]
+
+ss <- read_csv('ss.csv')
+sspsq <- read_csv('sspsq.csv')
+
+lmu <- summary(lm(ss~et, data=ss))
+lma <- summary(lm(ss~et+psq, data=sspsq))
+df['Sample Size', 'Unadjusted'] <- lmu[['coefficients']][2, 3]
+df['Sample Size', 'Adjusted'] <- lma[['coefficients']][2, 3]
+
+df
 ```
+Ageap, asthma, copd and mv are much more balanced in the PS strata, whilst for male and sample size, it's hard to tell. Might assess balance by mean standardized difference?  
 
 f) Calculate the stratum-specific and overall effect of early treatment (simple mean of the 5 strata). Please also provide the 95% CI for the overall treatment effect. [4 marks]  
 ```{r}
+means <- aggregate(death ~ et + psq, data = H1N1, FUN = mean)
+counts <- aggregate(death ~ et + psq, data = H1N1, FUN = length)
+cbind(means, counts$death)
 
+n <- as.numeric(table(H1N1$psq))
+n
+
+overmean <- sum((means$death[means$et == 1] - means$death[means$et == 0]) * n) / sum(n)
+overmean
+
+vars <- aggregate(death ~ et + psq, data = H1N1, FUN = var)
+cbind(vars, counts$death)
+
+overvar <- sum((vars$death / counts$death) * rep(n, each = 2) ^ 2) / sum(n) ^ 2
+overvar
+
+print(paste("95% CI: ", "(", overmean - 1.96 * sqrt(overvar) / 40, ", ", overmean + 1.96 * sqrt(overvar) / 40, ")"))
 ```
+
 
 g) Estimate the overall treatment effect using conditional logistic regression. [3 marks]  
 ```{r}
-
+library(survival)
+clr <- clogit(death ~ et + agegp + male + asthma + copd + mv + strata(psq), data = H1N1)
+summary(clr)
 ```
+Early treatment is associated with reducing the death rate with (OR = 0.80, 95% CI: 0.48 - 1.35).  
 
 h) Based on the above results, comment on the effectiveness of early treatment of oseltamivir in reducing mortality and validity of the results in terms of control for confounders. [3 marks]  
-```{r}
 
-```
+The early treatment of oseltamivir in reducing mortality is effective to certain extent.  

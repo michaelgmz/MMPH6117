@@ -1637,7 +1637,8 @@ pre code {
 (6) death = 1 indicates patients ultimately died of pdm H1N1</p>
 <pre class="r"><code>library(readr)
 H1N1 &lt;- read_csv(&quot;../Data/CMED6020 Assignment2 - H1N1pdm.CSV&quot;)</code></pre>
-<pre><code>## Parsed with column specification:
+<pre><code>## 
+## -- Column specification --------------------------------------------------------
 ## cols(
 ##   agegp = col_double(),
 ##   male = col_double(),
@@ -1648,15 +1649,223 @@ H1N1 &lt;- read_csv(&quot;../Data/CMED6020 Assignment2 - H1N1pdm.CSV&quot;)</cod
 ##   death = col_double()
 ## )</code></pre>
 <ol style="list-style-type: lower-alpha">
-<li><p>Calculate the crude mortality rates of patients receiving early and late oseltamivir treatment respectively. [2 marks]</p></li>
-<li><p>Describe the patient characteristics across the two treatment groups. [3 marks]</p></li>
-<li><p>Estimate the propensity score of receiving early oseltamivir treatment by including all available predictors as main effects in a logistic regression model. Comment on the main characteristics of patients receiving early treatment. [4 marks]</p></li>
-<li><p>Propensity score stratification (by propensity score quintiles) will be used to analyze the effect of early treatment. Quote the propensity score quintiles. [2 marks]</p></li>
-<li><p>Assess the balance of the patient characteristics and sample size across treatment groups by propensity score strata (Note: as the dataset have mainly categorical variables, this may limit the possibility of balancing of all variables). Propose any potential way to improve the balance? [4 marks]</p></li>
-<li><p>Calculate the stratum-specific and overall effect of early treatment (simple mean of the 5 strata). Please also provide the 95% CI for the overall treatment effect. [4 marks]</p></li>
-<li><p>Estimate the overall treatment effect using conditional logistic regression. [3 marks]</p></li>
-<li><p>Based on the above results, comment on the effectiveness of early treatment of oseltamivir in reducing mortality and validity of the results in terms of control for confounders. [3 marks]</p></li>
+<li>Calculate the crude mortality rates of patients receiving early and late oseltamivir treatment respectively. [2 marks]</li>
 </ol>
+<pre class="r"><code>with(H1N1, table(et, death), 1)</code></pre>
+<pre><code>##    death
+## et     0    1
+##   0 1155   72
+##   1  352   21</code></pre>
+<pre class="r"><code>round(with(H1N1, prop.table(table(et, death), 1)), 3)</code></pre>
+<pre><code>##    death
+## et      0     1
+##   0 0.941 0.059
+##   1 0.944 0.056</code></pre>
+<pre class="r"><code>with(H1N1, t.test(death ~ et))</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  death by et
+## t = 0.17359, df = 624.85, p-value = 0.8622
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  -0.02453767  0.02929654
+## sample estimates:
+## mean in group 0 mean in group 1 
+##      0.05867971      0.05630027</code></pre>
+<p>Treatment: 5.6% | Control: 5.9%<br />
+Estimated treatment effect = 0.3%, 95% CI (-2.4%, 2.9%)</p>
+<ol start="2" style="list-style-type: lower-alpha">
+<li>Describe the patient characteristics across the two treatment groups. [3 marks]</li>
+</ol>
+<pre class="r"><code>library(ggplot2)
+H1N1$et &lt;- as.factor(H1N1$et)
+with(H1N1, table(agegp, et), 1)</code></pre>
+<pre><code>##      et
+## agegp   0   1
+##     1 336  54
+##     2 257  35
+##     3 634 284</code></pre>
+<pre class="r"><code>with(H1N1, table(male, et), 1)</code></pre>
+<pre><code>##     et
+## male   0   1
+##    0 613 190
+##    1 614 183</code></pre>
+<pre class="r"><code>with(H1N1, table(mv, et), 1)</code></pre>
+<pre><code>##    et
+## mv    0   1
+##   0 786 194
+##   1 441 179</code></pre>
+<pre class="r"><code>with(H1N1, table(asthma, et), 1)</code></pre>
+<pre><code>##       et
+## asthma    0    1
+##      0 1041  308
+##      1  186   65</code></pre>
+<pre class="r"><code>with(H1N1, table(copd, et), 1)</code></pre>
+<pre><code>##     et
+## copd    0    1
+##    0 1024  271
+##    1  203  102</code></pre>
+<p>Patients receiving early treatment tend to be ealderly.<br />
+Patients receiving early treatment has no significant difference between genders.<br />
+Patients receiving early treatment tend to use mechanism ventalition less.<br />
+Patients receiving early treatment tend to have less co-morbid conditions.<br />
+These factos could be associated with mortality.</p>
+<ol start="3" style="list-style-type: lower-alpha">
+<li>Estimate the propensity score of receiving early oseltamivir treatment by including all available predictors as main effects in a logistic regression model. Comment on the main characteristics of patients receiving early treatment. [4 marks]</li>
+</ol>
+<pre class="r"><code>model &lt;- glm(et ~ agegp + male + mv + asthma + copd, data = H1N1, family = binomial(link = &quot;logit&quot;))
+model</code></pre>
+<pre><code>## 
+## Call:  glm(formula = et ~ agegp + male + mv + asthma + copd, family = binomial(link = &quot;logit&quot;), 
+##     data = H1N1)
+## 
+## Coefficients:
+## (Intercept)        agegp         male           mv       asthma         copd  
+##    -3.08897      0.61910     -0.03752      0.49895      0.26914      0.69521  
+## 
+## Degrees of Freedom: 1599 Total (i.e. Null);  1594 Residual
+## Null Deviance:       1738 
+## Residual Deviance: 1636  AIC: 1648</code></pre>
+<pre class="r"><code>H1N1$ps &lt;- predict(model, type = &quot;response&quot;)
+ggplot(H1N1, aes(x = ps, fill = et)) + 
+  geom_histogram(binwidth = 0.01) + 
+  facet_grid(et ~ .)</code></pre>
+<p><img src="data:image/png;base64,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" width="672" /> Based on the results, the main charactesristics of patients receiving the treatments should be agegp and copd, followed by mv as they have higher coefficients.<br />
+For the propensity score, the common support in the range is 0.05 - 0.6.</p>
+<ol start="4" style="list-style-type: lower-alpha">
+<li>Propensity score stratification (by propensity score quintiles) will be used to analyze the effect of early treatment. Quote the propensity score quintiles. [2 marks]</li>
+</ol>
+<pre class="r"><code>ps.boundary &lt;- quantile(H1N1$ps, 0:5 / 5)
+ps.boundary</code></pre>
+<pre><code>##         0%        20%        40%        60%        80%       100% 
+## 0.07534144 0.13143860 0.21939379 0.22588661 0.32459441 0.55764654</code></pre>
+<pre class="r"><code>H1N1$psq &lt;- cut(H1N1$ps, ps.boundary, right = F, include.lowest = T, labels = 1:5)</code></pre>
+<ol start="5" style="list-style-type: lower-alpha">
+<li>Assess the balance of the patient characteristics and sample size across treatment groups by propensity score strata (Note: as the dataset have mainly categorical variables, this may limit the possibility of balancing of all variables). Propose any potential way to improve the balance? [4 marks]</li>
+</ol>
+<pre class="r"><code>df &lt;- data.frame(matrix(nrow = 6, ncol = 2))
+colnames(df) &lt;- c(&#39;Unadjusted&#39;, &#39;Adjusted&#39;)
+rownames(df) &lt;- c(&#39;Agegp&#39;, &#39;Male&#39;, &#39;Asthma&#39;, &#39;Copd&#39;, &#39;Mv&#39;, &#39;Sample Size&#39;)
+
+lmu &lt;- summary(lm(agegp~et, data=H1N1))
+lma &lt;- summary(lm(agegp~et+psq, data=H1N1))
+df[&#39;Agegp&#39;, &#39;Unadjusted&#39;] &lt;- lmu[[&#39;coefficients&#39;]][2, 3]
+df[&#39;Agegp&#39;, &#39;Adjusted&#39;] &lt;- lma[[&#39;coefficients&#39;]][2, 3]
+
+lmu &lt;- summary(lm(male~et, data=H1N1))
+lma &lt;- summary(lm(male~et+psq, data=H1N1))
+df[&#39;Male&#39;, &#39;Unadjusted&#39;] &lt;- lmu[[&#39;coefficients&#39;]][2, 3]
+df[&#39;Male&#39;, &#39;Adjusted&#39;] &lt;- lma[[&#39;coefficients&#39;]][2, 3]
+
+lmu &lt;- summary(lm(asthma~et, data=H1N1))
+lma &lt;- summary(lm(asthma~et+psq, data=H1N1))
+df[&#39;Asthma&#39;, &#39;Unadjusted&#39;] &lt;- lmu[[&#39;coefficients&#39;]][2, 3]
+df[&#39;Asthma&#39;, &#39;Adjusted&#39;] &lt;- lma[[&#39;coefficients&#39;]][2, 3]
+
+lmu &lt;- summary(lm(copd~et, data=H1N1))
+lma &lt;- summary(lm(copd~et+psq, data=H1N1))
+df[&#39;Copd&#39;, &#39;Unadjusted&#39;] &lt;- lmu[[&#39;coefficients&#39;]][2, 3]
+df[&#39;Copd&#39;, &#39;Adjusted&#39;] &lt;- lma[[&#39;coefficients&#39;]][2, 3]
+
+lmu &lt;- summary(lm(mv~et, data=H1N1))
+lma &lt;- summary(lm(mv~et+psq, data=H1N1))
+df[&#39;Mv&#39;, &#39;Unadjusted&#39;] &lt;- lmu[[&#39;coefficients&#39;]][2, 3]
+df[&#39;Mv&#39;, &#39;Adjusted&#39;] &lt;- lma[[&#39;coefficients&#39;]][2, 3]
+
+ss &lt;- read_csv(&#39;ss.csv&#39;)</code></pre>
+<pre><code>## 
+## -- Column specification --------------------------------------------------------
+## cols(
+##   et = col_double(),
+##   ss = col_double()
+## )</code></pre>
+<pre class="r"><code>sspsq &lt;- read_csv(&#39;sspsq.csv&#39;)</code></pre>
+<pre><code>## 
+## -- Column specification --------------------------------------------------------
+## cols(
+##   et = col_double(),
+##   psq = col_double(),
+##   ss = col_double()
+## )</code></pre>
+<pre class="r"><code>lmu &lt;- summary(lm(ss~et, data=ss))
+lma &lt;- summary(lm(ss~et+psq, data=sspsq))
+df[&#39;Sample Size&#39;, &#39;Unadjusted&#39;] &lt;- lmu[[&#39;coefficients&#39;]][2, 3]
+df[&#39;Sample Size&#39;, &#39;Adjusted&#39;] &lt;- lma[[&#39;coefficients&#39;]][2, 3]
+
+df</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Unadjusted"],"name":[1],"type":["dbl"],"align":["right"]},{"label":["Adjusted"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"7.6404800","2":"0.6171561","_rn_":"Agegp"},{"1":"-0.3309898","2":"1.3229674","_rn_":"Male"},{"1":"1.0541238","2":"0.6457945","_rn_":"Asthma"},{"1":"4.6796899","2":"1.6150459","_rn_":"Copd"},{"1":"4.2029753","2":"1.9493607","_rn_":"Mv"},{"1":"NaN","2":"-5.0469852","_rn_":"Sample Size"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<p>Ageap, asthma, copd and mv are much more balanced in the PS strata, whilst for male and sample size, it’s hard to tell. Might assess balance by mean standardized difference?</p>
+<ol start="6" style="list-style-type: lower-alpha">
+<li>Calculate the stratum-specific and overall effect of early treatment (simple mean of the 5 strata). Please also provide the 95% CI for the overall treatment effect. [4 marks]</li>
+</ol>
+<pre class="r"><code>means &lt;- aggregate(death ~ et + psq, data = H1N1, FUN = mean)
+counts &lt;- aggregate(death ~ et + psq, data = H1N1, FUN = length)
+cbind(means, counts$death)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["et"],"name":[1],"type":["fct"],"align":["left"]},{"label":["psq"],"name":[2],"type":["fct"],"align":["left"]},{"label":["death"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["counts$death"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"0","2":"1","3":"0.03370787","4":"267"},{"1":"1","2":"1","3":"0.02941176","4":"34"},{"1":"0","2":"2","3":"0.06513410","4":"261"},{"1":"1","2":"2","3":"0.00000000","4":"41"},{"1":"0","2":"3","3":"0.04666667","4":"150"},{"1":"1","2":"3","3":"0.02439024","4":"41"},{"1":"0","2":"4","3":"0.06129032","4":"310"},{"1":"1","2":"4","3":"0.07627119","4":"118"},{"1":"0","2":"5","3":"0.08368201","4":"239"},{"1":"1","2":"5","3":"0.07194245","4":"139"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>n &lt;- as.numeric(table(H1N1$psq))
+n</code></pre>
+<pre><code>## [1] 301 302 191 428 378</code></pre>
+<pre class="r"><code>overmean &lt;- sum((means$death[means$et == 1] - means$death[means$et == 0]) * n) / sum(n)
+overmean</code></pre>
+<pre><code>## [1] -0.0145276</code></pre>
+<pre class="r"><code>vars &lt;- aggregate(death ~ et + psq, data = H1N1, FUN = var)
+cbind(vars, counts$death)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["et"],"name":[1],"type":["fct"],"align":["left"]},{"label":["psq"],"name":[2],"type":["fct"],"align":["left"]},{"label":["death"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["counts$death"],"name":[4],"type":["int"],"align":["right"]}],"data":[{"1":"0","2":"1","3":"0.03269409","4":"267"},{"1":"1","2":"1","3":"0.02941176","4":"34"},{"1":"0","2":"2","3":"0.06112585","4":"261"},{"1":"1","2":"2","3":"0.00000000","4":"41"},{"1":"0","2":"3","3":"0.04478747","4":"150"},{"1":"1","2":"3","3":"0.02439024","4":"41"},{"1":"0","2":"4","3":"0.05772001","4":"310"},{"1":"1","2":"4","3":"0.07105606","4":"118"},{"1":"0","2":"5","3":"0.07700151","4":"239"},{"1":"1","2":"5","3":"0.06725055","4":"139"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>overvar &lt;- sum((vars$death / counts$death) * rep(n, each = 2) ^ 2) / sum(n) ^ 2
+overvar</code></pre>
+<pre><code>## [1] 0.0001574231</code></pre>
+<pre class="r"><code>print(paste(&quot;95% CI: &quot;, &quot;(&quot;, overmean - 1.96 * sqrt(overvar) / 40, &quot;, &quot;, overmean + 1.96 * sqrt(overvar) / 40, &quot;)&quot;))</code></pre>
+<pre><code>## [1] &quot;95% CI:  ( -0.0151423985764758 ,  -0.0139128087963839 )&quot;</code></pre>
+<ol start="7" style="list-style-type: lower-alpha">
+<li>Estimate the overall treatment effect using conditional logistic regression. [3 marks]</li>
+</ol>
+<pre class="r"><code>library(survival)
+clr &lt;- clogit(death ~ et + agegp + male + asthma + copd + mv + strata(psq), data = H1N1)
+summary(clr)</code></pre>
+<pre><code>## Call:
+## coxph(formula = Surv(rep(1, 1600L), death) ~ et + agegp + male + 
+##     asthma + copd + mv + strata(psq), data = H1N1, method = &quot;exact&quot;)
+## 
+##   n= 1600, number of events= 93 
+## 
+##           coef exp(coef) se(coef)      z Pr(&gt;|z|)
+## et1    -0.2176    0.8045   0.2644 -0.823    0.411
+## agegp  -0.1456    0.8645   0.4706 -0.309    0.757
+## male    0.4133    1.5118   0.2548  1.622    0.105
+## asthma  0.4287    1.5353   0.2913  1.472    0.141
+## copd   -0.2933    0.7458   0.4492 -0.653    0.514
+## mv      0.3159    1.3715   0.2974  1.062    0.288
+## 
+##        exp(coef) exp(-coef) lower .95 upper .95
+## et1       0.8045     1.2431    0.4791     1.351
+## agegp     0.8645     1.1568    0.3437     2.174
+## male      1.5118     0.6615    0.9175     2.491
+## asthma    1.5353     0.6513    0.8675     2.717
+## copd      0.7458     1.3409    0.3092     1.799
+## mv        1.3715     0.7291    0.7656     2.457
+## 
+## Concordance= 0.613  (se = 0.027 )
+## Likelihood ratio test= 10.71  on 6 df,   p=0.1
+## Wald test            = 10.78  on 6 df,   p=0.1
+## Score (logrank) test = 11.02  on 6 df,   p=0.09</code></pre>
+<p>Early treatment is associated with reducing the death rate with (OR = 0.80, 95% CI: 0.48 - 1.35).</p>
+<ol start="8" style="list-style-type: lower-alpha">
+<li>Based on the above results, comment on the effectiveness of early treatment of oseltamivir in reducing mortality and validity of the results in terms of control for confounders. [3 marks]</li>
+</ol>
+<p>The early treatment of oseltamivir in reducing mortality is effective to certain extent.</p>
 
 
 
