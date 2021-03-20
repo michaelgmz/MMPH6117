@@ -1,0 +1,31 @@
+study,year ,country,sex,rr,rr.lb,rr.ub
+Smith,2014,Australia,M,1.17,0.74,1.86
+Smith,2014,Australia,F,0.75,0.57,0.99
+Mihrshahi,2014,Australia,F,0.89,0.68,1.17
+Tsai,2012,China,Both,0.91,0.62,1.14
+Albanese,2012,Cuba,Both,0.61,0.26,1.43
+Albanese,2012,Dominican Republic,Both,1.57,0.99,2.50
+Albanese,2012,Peru,Both,0.42,0.19,0.94
+Albanese,2012,Venezuela,Both,1.33,0.20,8.97
+Albanese,2012,Mexico,Both,1.09,0.41,2.89
+Albanese,2012,India,Both,4.84,2.24,10.47
+Lucas,2011,America,F,1.07,0.74,1.55
+Li,2011,America,M,0.48,0.25,0.94
+Li,2011,America,F,0.87,0.63,1.20
+Chrysohoou,2011,Greece,Both,0.34,0.19,0.61
+Suominen-Taipale,2010,Finland,M,0.60,0.30,0.90
+Suominen-Taipale,2010,Finland,M,0.50,0.20,1.20
+Murakami,2010,Japan,M,0.73,0.55,0.97
+Murakami,2010,Japan,F,1.01,0.80,1.28
+Sanchez-Villegas,2009,Spain,Both,0.73,0.59,0.91
+Colangelo,2009,America,Both,0.97,0.73,1.28
+Colangelo,2009,America,M,1.16,0.73,1.83
+Colangelo,2009,America,F,0.87,0.61,1.24
+Astorg,2008,France,Both,0.70,0.53,0.92
+Astorg,2008,France,M,0.50,0.30,0.83
+Astorg,2008,France,F,0.80,0.58,1.12
+Barberger-Gateau,2005,France,Both,0.63,0.52,0.75
+Timonen,2004,Finland,M,1.00,0.71,1.41
+Timonen,2004,Finland,F,0.71,0.56,0.91
+Hakkarainen,2004,Finland,M,0.97,0.70,1.33
+Tanskanen,2001,Finland,Both,0.76,0.64,0.91
