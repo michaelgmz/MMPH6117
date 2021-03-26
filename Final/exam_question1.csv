@@ -1,0 +1,21 @@
+study,country,sample_size,cfr,cfr.lb,cfr.ub
+Chen,China,135,68,40,96
+Hu,China,323,90,80,100
+Huang,China,238,50,15,85
+Jung,South Korea,5179,58,43,73
+Liao,China,81,30,5,55
+Nasir,Pakistan,30,50,24,76
+Yu,China,226,65,57,73
+Zhu,China,102,86,73,99
+Almazeedi,Kuwait,1096,42,26,58
+Goshayeshi,Iran,1067,35,29,41
+Rinott,Israel,403,71,50,92
+Alfano,Italty,307,32,20,44
+Grasselli,Italy,1591,29,26,32
+Israelsen,Denmark,175,63,46,80
+Pedersen,Denmark,17,41,20,62
+Piano,Italty,584,29,18,40
+Arentz,United States,21,67,45,89
+Argenziano,United States,1000,48,41,55
+Klang,United States,3406,84,82,86
+Olivares,Chile,21,22,0,44
