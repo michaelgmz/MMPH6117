@@ -1,10 +1,12 @@
 ---
 title: "MMPH6117 Assignment 1"
-author: 
-- "Name: Mingze Gao"
-- "UID: 3035426241"
-subtitle: "Association of invasive meningococcal disease and environmental and virologic exposure"
+author:
+- 'Name: Mingze Gao'
+- 'UID: 3035426241'
+subtitle: Association of invasive meningococcal disease and environmental and virologic
+  exposure
 output:
+  pdf_document: default
   html_document:
     df_print: paged
 ---

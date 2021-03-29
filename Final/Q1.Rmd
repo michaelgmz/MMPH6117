@@ -1,0 +1,84 @@
+---
+title: "MMPH6117 Final Examination"
+author:
+- 'Name: Mingze Gao'
+- 'UID: 3035426241'
+subtitle: Question 1
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+Read data sets.  
+```{r Read Data}
+library(readr)
+exam1 <- read_csv("../Final/exam_question1.csv")
+exam2 <- read_csv("../Final/exam_question2.csv")
+exam3 <- read_csv("../Final/exam_question3.csv")
+```
+
+A) A  
+```{r}
+exam1$logcfr <- log(exam1$cfr)
+exam1$se.logcfr <- (log(exam1$cfr.ub) - log(exam1$cfr.lb + 1e-6)) / (2 * 1.96)
+
+library(metafor)
+exam1.fe <- rma(yi = logcfr, sei = se.logcfr, slab = study, method = "FE", data = exam1)
+exam1.fe
+
+with(exam1.fe, exp(c(b, ci.lb, ci.ub)))
+```
+The overall estimate is 76.70 (95% CI = 75.08 - 78.35)  
+
+B) B  
+```{r}
+Q <- exam1.fe$QE
+I2 <- (Q - (exam1.fe$k - 1)) / Q * 100
+
+I2
+```
+There is evidence of significant heterogeneity since the Higgins' I^2 is substantial high.  
+
+C) C  
+```{r}
+exam1.re <- rma(yi = logcfr, sei = se.logcfr, slab = study, method = "REML", data = exam1)
+exam1.re
+
+with(exam1.re, exp(c(b, ci.lb, ci.ub)))
+```
+The overall estimate is 53.08 (95% CI = 44.27 - 63.65)  
+
+D) D  
+```{r}
+forest(exam1.re, atransf = exp, refline = 0, at = log(c(0.1,10,100,500,1000)), showweights = T)
+```
+
+E) E  
+```{r}
+funnel(exam1.re, atransf=exp)
+regtest(exam1.re)
+```
+The funnel plot shows no significant asymmetry and Egger's test null hypothesis is rejected since p > 0.01. So no strong evidence of publication bias.  
+
+F) F  
+```{r}
+exam1$mark <- 0
+exam1$mark[c(1,2,3,5,7,8,12,13,16,17,18,19)] <- 1
+
+exam1.center <- exam1[exam1$mark==1,]
+exam1.re.center <- rma(yi=logcfr, sei=se.logcfr, slab=study, method="REML", data=exam1.center)
+with(exam1.re.center, exp(c(b, ci.lb, ci.ub)))
+
+exam1.non <- exam1[exam1$mark==0,]
+exam1.re.non <- rma(yi=logcfr, sei=se.logcfr, slab=study, method="REML", data=exam1.non)
+with(exam1.re.non, exp(c(b, ci.lb, ci.ub)))
+```
+Based on the model applied to seperate regions, the hypothesis is correct as CFR from epicenters can be higher than non-epicenters with overall estimate 54.31 (95% CI: 41.80 - 70.56) compared with 50.37 (95% CI: 40.33 - 62.91)  
+
+G) G  
+1) The CFR of Covid-19 patients requiring IMV globally is quite high, after adjusting the heterogeneity of differenct studies, the overall CFR is 53.08.  
+2) The CFR differs quite obvious between epicenters and non-epicenters, suggesting the overwhelmed healthcare system would deteriorate the situation.  
+3) Although no stong publication bias was reported by funnel plot and following assessments, but some datasets contains small smple size which poses question on the validity of the resutllt.
+4) The Olivares data has 0 on lower bound of CI which cannot perform log function, thus might not be credible and a 1e-6 is added to avoid that. Similarly, forest plot also assigned minimal weight on this data.  

@@ -1,4 +1,4 @@
-fish <- read.csv('fishconsumption.csv')
+fish <- read.csv('../Data/fishconsumption.csv')
 
 # mark stratified analysis
 fish$strat <- 0

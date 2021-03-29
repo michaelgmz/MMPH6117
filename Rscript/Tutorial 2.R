@@ -1,5 +1,5 @@
 # Tutorial 2
-flu <- read.csv("fluvaccine.csv")
+flu <- read.csv("../Data/fluvaccine.csv")
 
 # Q1 descriptive analysis
 summary(flu)

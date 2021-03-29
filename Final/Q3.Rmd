@@ -1,0 +1,91 @@
+---
+title: "MMPH6117 Final Examination"
+author:
+- 'Name: Mingze Gao'
+- 'UID: 3035426241'
+subtitle: Question 3
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+Read data sets.  
+```{r Read Data}
+library(readr)
+exam1 <- read_csv("../Final/exam_question1.csv")
+exam2 <- read_csv("../Final/exam_question2.csv")
+exam3 <- read_csv("../Final/exam_question3.csv")
+```
+
+A) A  
+```{r}
+exam3$agegp <- 1
+for(i in 1:nrow(exam3)) 
+{
+  if (exam3[i, "age"] >= 60)
+  {
+    exam3[i, "agegp"] = 2
+  }
+  else
+  {
+    if (exam3[i, "age"] <= 17)
+    {
+      exam3[i, "agegp"] = 0
+    }
+  }
+}
+round(with(exam3, prop.table(table(agegp, death),1)),3)
+```
+Agegp 0, 1, 2 corresponding to 0-17y, 18-59y and >= 60y respectively.  The the case fatality ratio by age groups are 0.6%, 1% and 38.1% respectively. A high fatality rate can be observed in elderly.  
+
+B) B  
+```{r}
+require(MASS)
+reb <- glm(death~age+comorbid, data=exam3, family=binomial)
+summary(reb)
+```
+Based on the coefficients, increasing both age and comorbid could result in higher death rate, however, the p-value of comorbid for this model is not significant.  
+
+C) C  
+```{r}
+exam3$age2 <- exam3$age * exam3$age
+rec <- glm(death~age2+age+comorbid, data=exam3, family=binomial)
+summary(rec)
+```
+Based on the coefficients, increasing both age^2 and comorbid could result in higher death rate whilst age poses negative effect on the outcome. However, the p-value of comorbid and age for this model is not significant. Also, the coefficients for age and age2 are very small, might not be credible.  
+
+D) D 
+```{r}
+deviance(reb)/df.residual(reb)
+deviance(rec)/df.residual(rec)
+```
+For reference, to evaluate satisfactory fitting of the model, the residual deviance / df should not be too much bigger than 1, better if it is below 1. The above model fits satisfactorily.  
+
+E) E  
+```{r}
+AIC(reb, rec)
+```
+Regarding AIC metric, a lower AIC indicates a better model. So based on the results of AIC and goodness of fit, model C is preferred.  
+However, model C is quadratic effect on age which is not necessary I suppose and since the difference between AIC and residual is small, model B might be better.  
+
+F) F  
+```{r}
+require(car)
+require(MASS)
+library(survival)
+vif(rec)
+exam3$agescale <- scale(exam3$age, scale = F)
+exam3$age2 <- exam3$agescale * exam3$agescale
+ref <- glm(death~age2+age+comorbid, data=exam3, family=binomial)
+summary(ref)
+vif(ref)
+```
+The multicollinearity among the variables of model C is high for age and age2 because vif result is far away from 1.  
+We could see that after certering the data, the vif can be reduced as well as the collinearity.  
+
+G) G  
+1) The crude fatality rate for zoonotic disease is higher for elderly people, whilst the difference is not tremendous between other adults and teenagers.  
+2) Beside age, comorbid could also contribute to the death rate, however the effect might not be significant.  
+3) Certering is sometims useful for tackling the collinearity problem. After reducing, both age2 and age are significant regarding p value. The effect of age2 is smaller than age.  
