@@ -1,0 +1,78 @@
+---
+title: "MMPH6117 Assignment 3"
+author:
+- 'Name: Mingze Gao'
+- 'UID: 3035426241'
+subtitle: Impact of peer BMI on adolescents
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+An observation study recruited 500 adolescents and investigated the peer impact on their BMI. The study also included information on the mean income level in the community where their schools are located. The dataset ‘bmi_peer.csv’ stored the following variables related to the timing of treatment and mortality:  
+(1) bmi.adol indicates the BMI of the recruited adolescents in the study  
+(2) bmi.friend indicates the BMI of close friends of the adolescents in the same school  
+(3) bmi.parent indicates the BMI of the friends’ parents  
+(4) income indicates the mean income level (1: low, 10: high) of the district where the school locates  
+
+```{r Read Data}
+library(readr)
+bmi <- read_csv("../Data/CMED6020 Assignment3 - BMI peer.csv")
+```
+
+It was recognized by the investigators that the relationship between BMI in adolescents and their close friends is likely to be confounded by multiple factors. Hence an instrumental variable analysis, using the BMI of friend’s parents as an instrumental variable, will be carried out.  
+
+a) Produce the scatterplot between the BMI of the adolescents, their close friend and close friends’ parent. Describe the pattern. [3 marks]  
+```{r}
+library(car)
+library(carData)
+scatterplot(bmi.adol ~ bmi.friend, data = bmi)
+scatterplot(bmi.adol ~ bmi.parent, data = bmi)
+scatterplot(bmi.friend ~ bmi.parent, data = bmi)
+```
+The bmi of adolescent and adolescent's friends follows a positive relation.  
+Same trend for that of adolescent and parent, friends and their parents.  
+
+b) From the data, assess empirically if income is a confounding factor. You may regard income as a continuous variable. [3 marks]  
+```{r}
+summary(lm(bmi.adol ~ income, data = bmi))
+summary(lm(bmi.friend ~ income, data = bmi))
+```
+Income is a confounding factor since it has a positive correlation and influences both the dependent and independent variables.  
+
+c) Estimate the impact of close friends’ BMI accounting for observed confounding factors. [3 mark]  
+```{r}
+summary(lm(bmi.adol ~ bmi.friend + income, data = bmi))
+```
+An increase of 1kg/m2 in close friend's average BMI is associated with 0.562kg/m2 increase of an adolescent's BMI, after accounting for observed confounding factors.  
+
+d) Carry out an instrumental variable analysis to estimate the same effect as in c). [4 marks]  
+```{r}
+library(AER)
+bmi.2sls <- ivreg(bmi.adol ~ bmi.friend | bmi.parent, data = bmi)
+summary(bmi.2sls)
+```
+An increase of 1 kg/m2 in close friend's average BMI is associated with 0.738 kg/m2 increase of an adolescent's BMI, after using instrumental variable analysis.  
+
+e) Test the relevance of the instrument. [4 marks]  
+```{r}
+bmi.lm <- lm(bmi.friend ~ bmi.parent, data = bmi)
+bmi.lm0 <- lm(bmi.friend ~ 1, data = bmi)
+anova(bmi.lm, bmi.lm0)
+```
+The F statistics is 418.38 which is > 10, indicating high correlation between IV and endogenous regressor.  
+
+f) Carry out a test for endogeneity. [4 marks]  
+```{r}
+summary(bmi.2sls, diagnostics = TRUE)
+DWH = (0.7375 - 0.56165) / sqrt(0.05212 * 0.05212 - 0.03369 * 0.03369)
+DWH
+```
+DWH = 4.421919 > 1.96 there is evidence that IV estimate is better.  
+
+g) Based on the above results, draw a conclusion for the analysis. [4 marks]  
+The peer impact from friend's BMI on adolescent's BMI does exists.  
+Parent's BMI is an instrumental factor and the relevance is high.  
+There is evidence supporting that using IVA is better than solely LS.  
+
