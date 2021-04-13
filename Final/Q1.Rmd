@@ -1,8 +1,8 @@
 ---
 title: "MMPH6117 Final Examination"
 author:
-- 'Name: Mingze Gao'
-- 'UID: 3035426241'
+- 'Name: MichaelGMZ'
+- 'UID: xxxxxxxxxx'
 subtitle: Question 1
 output:
   word_document: default
