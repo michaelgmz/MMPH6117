@@ -1,8 +1,8 @@
 ---
 title: "MMPH6117 Assignment 2"
 author:
-- 'Name: Mingze Gao'
-- 'UID: 3035426241'
+- 'Name: MichaelGMZ'
+- 'UID: xxxxxxxxxx'
 subtitle: Effectiveness of early administration of oseltamivir to patients with H1N1
   pdm
 output:
