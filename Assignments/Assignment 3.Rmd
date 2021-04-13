@@ -1,8 +1,8 @@
 ---
 title: "MMPH6117 Assignment 3"
 author:
-- 'Name: Mingze Gao'
-- 'UID: 3035426241'
+- 'Name: MichaelGMZ'
+- 'UID: xxxxxxxxxx'
 subtitle: Impact of peer BMI on adolescents
 output:
   html_document:
