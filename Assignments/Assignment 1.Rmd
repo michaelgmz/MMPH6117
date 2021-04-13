@@ -1,8 +1,8 @@
 ---
 title: "MMPH6117 Assignment 1"
 author:
-- 'Name: Mingze Gao'
-- 'UID: 3035426241'
+- 'Name: MichaelGMZ'
+- 'UID: xxxxxxxxxx'
 subtitle: Association of invasive meningococcal disease and environmental and virologic
   exposure
 output:
